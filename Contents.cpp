@@ -9,6 +9,8 @@
 ******************************/
 VISUALIZE_TEXT::VISUALIZE_TEXT()
 : c_syphon(0)
+, now(0)
+, t_LastInt(0)
 {
 	/********************
 	********************/
@@ -27,8 +29,12 @@ VISUALIZE_TEXT::VISUALIZE_TEXT()
 	
 	/********************
 	********************/
+	/*
 	N_Lines_PerSec[0] = 1.1;
-	N_Lines_PerSec[1] = 8.2;
+	N_Lines_PerSec[1] = 8.5;
+	*/
+	N_Lines_PerSec[0] = 0.6;
+	N_Lines_PerSec[1] = 9.3;
 	
 	for(int i = 0; i < NUM_CONTENTS; i++) { NumLines_Proceed[i] = 0; }
 	
@@ -239,7 +245,7 @@ void VISUALIZE_TEXT::setup()
 	/********************
 	********************/
 	font.load("font/RictyDiminishedDiscord-Bold.ttf", 11, true, true, true);
-	// font.load("font/RictyDiminished-Regular.ttf", 12, true, true, true);
+	// font.load("font/RictyDiminished-Regular.ttf", 13, true, true, true);
 	
 	/********************
 	********************/
@@ -247,6 +253,10 @@ void VISUALIZE_TEXT::setup()
 	
 	fbo_SyphonServer[FBO_BASE_WHITE].setName("oFMirror_White");
 	fbo_SyphonServer[FBO_BASE_BLACK].setName("oFMirror_Black");
+	
+	/********************
+	********************/
+	t_LastInt = ofGetElapsedTimef();
 }
 
 /******************************
@@ -325,6 +335,7 @@ void VISUALIZE_TEXT::draw_and_sendsyphon(int VisualizeText_Disp_id)
 ******************************/
 double VISUALIZE_TEXT::get_FontHeight()
 {
+	// return font.stringHeight("0123456789abcdefghijklmnopqrstuvwxyz") * 1.5;
 	return font.stringHeight("0123456789abcdefghijklmnopqrstuvwxyz") * 1.5;
 }
 

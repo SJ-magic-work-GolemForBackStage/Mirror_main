@@ -47,7 +47,8 @@ private:
 		, str_line(s)
 		{
 			TextColor[FBO_BASE_BLACK] = ofColor(255, 255, 255, 255);
-			TextColor[FBO_BASE_WHITE] = ofColor(0, 0, 0, 255);
+			// TextColor[FBO_BASE_WHITE] = ofColor(0, 0, 0, 255);
+			TextColor[FBO_BASE_WHITE] = ofColor(0, 0, 0, 10);
 		}
 		
 		void draw(ofTrueTypeFont& font, int Base_BlackOrWhite)
