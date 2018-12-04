@@ -4,15 +4,10 @@
 
 /************************************************************
 ************************************************************/
-#define DEBUG_BY_DUMMY
-
-
-/************************************************************
-************************************************************/
 
 /******************************
 ******************************/
-ofApp::ofApp()
+ofApp::ofApp(const char* Golem0_IP, const char* Golem1_IP)
 : Osc_Unity("127.0.0.1", 12360, 12361)
 , VisualizeText_Disp_id(0)
 {
@@ -22,20 +17,13 @@ ofApp::ofApp()
 	
 	/********************
 	********************/
-	char buf[BUF_SIZE_S];
+	Osc_Golem[0].setup(Golem0_IP, 12359, 12358);
+	Osc_Golem[1].setup(Golem1_IP, 12359, 12362);
 	
-#ifdef DEBUG_BY_DUMMY
-	sprintf(buf, "127.0.0.1");
-	
-	Osc_Golem[0].setup(buf, 12359, 12358);
-	Osc_Golem[1].setup(buf, 12359, 12358);
-#else
-	sprintf(buf, "10.0.0.5");
-	Osc_Golem[0].setup(buf, 12359, 12358);
-	
-	sprintf(buf, "10.0.0.6");
-	Osc_Golem[1].setup(buf, 12359, 12358);
-#endif
+	const int PORT_OFFSET = 12363;
+	for(int i = 0; i < NUM_DUMMY_GOLEMS; i++){
+		Osc_Golem[i + NUM_REAL_GOLEMS].setup("127.0.0.1", PORT_OFFSET + i * 3 + 2, PORT_OFFSET + i * 3 + 1);
+	}
 }
 
 /******************************
@@ -78,6 +66,13 @@ void ofApp::setup(){
 	udp_SendToUnity.Connect("127.0.0.1",12357);
 	udp_SendToUnity.SetNonBlocking(true);
 	
+	const int PORT_OFFSET = 12363;
+	for(int i = 0; i < NUM_DUMMY_GOLEMS; i++){
+		udp_Receive[i + NUM_REAL_GOLEMS].Create();
+		udp_Receive[i + NUM_REAL_GOLEMS].Bind(PORT_OFFSET + i * 3 + 0);
+		udp_Receive[i + NUM_REAL_GOLEMS].SetNonBlocking(true);
+	}
+	
 	/********************
 	********************/
 	VisualizeText.setup();
@@ -88,6 +83,7 @@ void ofApp::setup(){
 void ofApp::ResTo_UdpFromGolem(int GolemId)
 {
 	bool b_MessageReceived;
+	bool b_Sended = false;
 	
 	do{
 		/********************
@@ -111,11 +107,17 @@ void ofApp::ResTo_UdpFromGolem(int GolemId)
 			vector<string> block = ofSplitString(message,"<p>");
 			
 			if(block[0] == "/Golem/SkeletonDefinition"){
-				udp_SendToUnity.Send(message_with_id.c_str(), message_with_id.length()); // bypass
+				if(!b_Sended){
+					udp_SendToUnity.Send(message_with_id.c_str(), message_with_id.length()); // bypass
+					b_Sended = true;
+				}
 				
 			}else if(block[0] == "/Golem/SkeletonData"){
-				udp_SendToUnity.Send(message_with_id.c_str(), message_with_id.length()); // bypass
-				FromGolem_FrameDataAll.set(block);
+				if(!b_Sended){
+					udp_SendToUnity.Send(message_with_id.c_str(), message_with_id.length()); // bypass
+					FromGolem_FrameDataAll.set(block);
+					b_Sended = true;
+				 }
 			}
 			
 		}else{
@@ -133,23 +135,17 @@ void ofApp::ResTo_OscFromUnity(){
 		ofxOscMessage m_receive;
 		Osc_Unity.OscReceive.getNextMessage(&m_receive);
 		
-		if(m_receive.getAddress() == "/Message/ToGolem_0"){
+		if(m_receive.getAddress() == "/Message/ToGolem"){
 			ofxOscMessage m;
 			m.setAddress("/Message/ToGolem");
 			
 			m.addFloatArg(float(m_receive.getArgAsFloat(0)));							// message id
-			for(int i = 1; i < 11; i++) { m.addFloatArg(m_receive.getArgAsFloat(i)); }	// params
+			m.addFloatArg(0.0f);														// delete Golem id
+			for(int i = 2; i < 11; i++) { m.addFloatArg(m_receive.getArgAsFloat(i)); }	// params
 			
-			Osc_Golem[0].OscSend.sendMessage(m);
+			int GolemId = int(m_receive.getArgAsFloat(1));
+			if(GolemId < NUM_GOLEMS) Osc_Golem[GolemId].OscSend.sendMessage(m);
 			
-		}else if(m_receive.getAddress() == "/Message/ToGolem_1"){
-			ofxOscMessage m;
-			m.setAddress("/Message/ToGolem");
-			
-			m.addFloatArg(float(m_receive.getArgAsFloat(0)));							// message id
-			for(int i = 1; i < 11; i++) { m.addFloatArg(m_receive.getArgAsFloat(i)); }	// params
-			
-			Osc_Golem[1].OscSend.sendMessage(m);
 		}
 	}
 }

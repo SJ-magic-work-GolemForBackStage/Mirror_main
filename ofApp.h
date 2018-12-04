@@ -20,7 +20,10 @@ private:
 	/****************************************
 	****************************************/
 	enum{
-		NUM_GOLEMS = 2,
+		NUM_GOLEMS = 12, // Real = 2 + Dummy = max 10.
+		
+		NUM_DUMMY_GOLEMS = 10,
+		NUM_REAL_GOLEMS = NUM_GOLEMS - NUM_DUMMY_GOLEMS,
 	};
 	
 	OSC_TARGET Osc_Golem[NUM_GOLEMS];
@@ -49,7 +52,7 @@ private:
 public:
 	/****************************************
 	****************************************/
-	ofApp();
+	ofApp(const char* Golem0_IP, const char* Golem1_IP);
 	~ofApp();
 	
 	void setup();
